@@ -3,7 +3,7 @@
 #include "DeltaTime.h"
 
 static bool vsyncEnabled = true;
-float BackColor[3] = { 0.0f, 0.0f, 0.0f };
+float BackColor[3] = {0.308f, 0.504f, 0.784f };
 float Outline = 0.04f;
 
 void Update_Settings(){
