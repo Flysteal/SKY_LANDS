@@ -4,6 +4,7 @@
 
 #include "Model.h"
 #include "DeltaTime.h"
+#include "Sett_Debug.h"
 
 
 const unsigned short int width = 800;
@@ -119,9 +120,6 @@ int main()
 
 //#6
 
-float bgColor[3] = { 0.0f, 0.0f, 0.0f };
-double xp = 0.0, yp = 0.0;
-float outL= 0.03f;
 
 	GLuint64 lastGpuTime = 0;
     while (!glfwWindowShouldClose(window))
@@ -137,35 +135,10 @@ float outL= 0.03f;
 		camera.updateMatrix(45.0f, 0.1f, 1000.0f);
 
 
+		Update_Settings(); //for the imgui update frame
+		Debug_Settings(); // for imgui window settings
+		glClearColor(BackColor[0], BackColor[1], BackColor[2], 1.0f); // to set the color to the imgui input 
 
-        // Tell OpenGL a new frame is about to begin
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
-
-
-
-        // ImGUI window creation
-		ImGui::Begin("Sky Lands-Debug"); 
-		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
-		ImGui::Spacing();//space
-		if(ImGui::Checkbox("Enable Vsync", &vsyncEnabled)){
-			glfwSwapInterval(vsyncEnabled ? 1 : 0);
-		}
-		ImGui::Spacing();//space
-		ImGui::Text( "time: %f", glfwGetTime());
-		ImGui::Text( "DeltaTime: %f", deltaTime);
-		ImGui::Spacing();
-		//space
-		glfwGetCursorPos(window,  &xp,  &yp);
-		ImGui::Text("Mouse Position: (%f, %f)", xp, yp);
-		ImGui::ColorEdit3("Background Color", bgColor);
-		ImGui::InputFloat("outline ", &outL, 0.1f, 1.0f, "%.3f");
-		ImGui::Spacing();//space
-		ImGui::Text("GPU Time: %lu ns", lastGpuTime);
-		ImGui::End();
-		glClearColor(bgColor[0], bgColor[1], bgColor[2], 1.0f);	
-		//(0.304f, 0.633f, 0.863f, 1.000f)
 
         // End the query
         glEndQuery(GL_TIME_ELAPSED);
@@ -194,7 +167,7 @@ float outL= 0.03f;
 		glDisable(GL_DEPTH_TEST);
 
         outliningProgram.Activate();
-		glUniform1f(glGetUniformLocation(outliningProgram.ID, "outlining"), outL);
+		glUniform1f(glGetUniformLocation(outliningProgram.ID, "outlining"), Outline);
 		ground.Draw(shaderProgram, camera);
 		glDisable(GL_CULL_FACE);
 
@@ -211,9 +184,8 @@ float outL= 0.03f;
 		glEnable(GL_DEPTH_TEST);
 
 		
-		// Renders the ImGUI elements
-		ImGui::Render();
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		Render_Settings(); // for imgui render frame
+		
 	    glfwSwapBuffers(window);
 	    glfwPollEvents();
     }
