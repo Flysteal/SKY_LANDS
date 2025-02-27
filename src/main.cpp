@@ -5,10 +5,13 @@
 #include "Model.h"
 
 #include "DeltaTime.h"
-const unsigned int width = 800;
-const unsigned int height = 800;
+const unsigned short int width = 800;
+const unsigned short int height = 800;
 
-
+void windowResizeCallback(GLFWwindow* window, int width, int height) {
+    // Handle the window resize event
+    glViewport(0, 0, width, height);
+}
 
 int main()
 {
@@ -20,7 +23,10 @@ int main()
      glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
      // Tell GLFW we are using the CORE profile
      // So that means we only have the modern functions
+
      glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	 glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+
      GLFWwindow* window = glfwCreateWindow(width, height, "Sky Lands ", NULL, NULL);
 
     if (!window) { std::cerr << "Failed to create GLFW window" << std::endl;
@@ -35,7 +41,6 @@ int main()
         return -3; // special one:)
     }
     gladLoadGL();
-    glViewport(0, 0, width, height);
 
 
 
@@ -43,7 +48,8 @@ int main()
 	Shader shaderProgram("/home/fly/SKY_LANDS/Resourcefiles/Shader/default.vert",  "/home/fly/SKY_LANDS/Resourcefiles/Shader/default.frag");
     //for outlinez
     Shader outliningProgram("/home/fly/SKY_LANDS/Resourcefiles/Shader/outlining.vert", "/home/fly/SKY_LANDS/Resourcefiles/Shader/outlining.frag");
-
+	Shader grassProgram("/home/fly/SKY_LANDS/Resourcefiles/Shader/default.vert", "/home/fly/SKY_LANDS/Resourcefiles/Shader/grass.frag");
+	
 
     glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 	glm::vec3 lightPos = glm::vec3(0.5f, 0.5f, 0.5f);
@@ -51,20 +57,22 @@ int main()
 	lightModel = glm::translate(lightModel, lightPos);
 
 
-
 	shaderProgram.Activate();
 	glUniform4f(glGetUniformLocation(shaderProgram.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
 	glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
-
+	glUniform4f(glGetUniformLocation(grassProgram.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
+	glUniform3f(glGetUniformLocation(grassProgram.ID, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
     
-
-    glfwSwapInterval(0); //vsync on 
+	bool vsyncEnabled =true;
+    glfwSwapInterval(vsyncEnabled); //vsync on 
     glEnable(GL_DEPTH_TEST);// what is closer then others
+	glfwSetWindowSizeCallback(window, windowResizeCallback);
+	
     //do not use!! .. 
     //glDepthFunc(GL_LESS);
 
 
-    glEnable(GL_CULL_FACE); // for renedering and sonic faster  |
+    // glEnable(GL_CULL_FACE); // for renedering and sonic faster  |
     glEnable(GL_FRONT); // the front for an obkect				|face cool +_-
     glEnable(GL_CCW); //counter clock wise						|
 
@@ -83,13 +91,18 @@ int main()
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init("#version 330");
 
+	
+
     Camera camera(width, height, glm::vec3(0.0f, 0.0f, 2.0f));
 
 	
 	// Load in a model
-	Model model("/home/fly/SKY_LANDS/Resourcefiles/models/map/scene.gltf");
+	Model model("/home/fly/SKY_LANDS/Resourcefiles/models/ground/scene.gltf");
+	Model grass("/home/fly/SKY_LANDS/Resourcefiles/models/grass/scene.gltf");
 
-	float bgColor[3] = { 0.0f, 0.0f, 0.0f };
+float bgColor[3] = { 0.0f, 0.0f, 0.0f };
+double xp = 0.0, yp = 0.0;
+float outL= 0.03f;
 
     while (!glfwWindowShouldClose(window))
     {
@@ -108,17 +121,30 @@ int main()
     	camera.Inputs(window);
 		camera.updateMatrix(45.0f, 0.1f, 1000.0f);
 
+		
 
         // ImGUI window creation
 		ImGui::Begin("Sky Lands-Debug");
 		// Text that appears in the window
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+
 		ImGui::Text( "time: %f", glfwGetTime());
 		ImGui::Text( "DeltaTime: %f", deltaTime);
+
+		if(ImGui::Checkbox("Enable Vsync", &vsyncEnabled)){
+			glfwSwapInterval(vsyncEnabled ? 1 : 0);
+		}
+
+		glfwGetCursorPos(window,  &xp,  &yp);
+		ImGui::Text("Mouse Position: (%f, %f)", xp, yp);
 		ImGui::ColorEdit3("Background Color", bgColor);
+		ImGui::InputFloat("outline ", &outL, 0.1f, 1.0f, "%.3f");
 		ImGui::End();
 		glClearColor(bgColor[0], bgColor[1], bgColor[2], 1.0f);	
 		//(0.304f, 0.633f, 0.863f, 1.000f)
+
+		// Display the focus status
+	
 
 
 
@@ -137,9 +163,13 @@ int main()
 		glStencilMask(0x00);
 		// Disable the depth buffer
 		glDisable(GL_DEPTH_TEST);
+
         outliningProgram.Activate();
-		glUniform1f(glGetUniformLocation(outliningProgram.ID, "outlining"), 0.08f);
+		glUniform1f(glGetUniformLocation(outliningProgram.ID, "outlining"), outL);
 		model.Draw(outliningProgram, camera);
+		glDisable(GL_CULL_FACE);
+		grass.Draw(grassProgram, camera);
+		
 
 
         // Enable modifying of the stencil buffer
