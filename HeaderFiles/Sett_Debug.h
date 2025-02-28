@@ -8,10 +8,10 @@
 extern float BackColor[3];
 extern float Outline;
 
-
-extern void Debug_Settings(); //for imgui settings
-extern void Update_Settings(); //for imgui settings
-extern void Render_Settings();// for imgui render 
+extern void i_Init_Settings(GLFWwindow *window); ///for init imgui settings
+extern void i_Debug_Settings(); //for imgui settings
+extern void i_Update_Settings(); //for imgui settings
+extern void i_Render_Settings();// for imgui render 
 // extern void 
 
 

@@ -20,7 +20,7 @@ pkg_check_modules(GTKMM REQUIRED gtkmm-3.0)
 
 # Include the gtkmm headers
 include_directories(${GTKMM_INCLUDE_DIRS})
-# Include directories
+# Include directoriess
 include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/HeaderFiles)
 include_directories(${CMAKE_SOURCE_DIR}/imgui)
